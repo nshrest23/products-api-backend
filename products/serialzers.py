@@ -1,6 +1,6 @@
 from rest_framework import serializers
-#from django.contrib.auth.models import User
 from products.models import Product, User
+from datetime import datetime, timezone
 
 class UserRegisterSerializer(serializers.ModelSerializer):
 
@@ -39,4 +39,14 @@ class ProductModelSerializer(serializers.ModelSerializer):
         print("validated_data", validated_data)
         product = Product.objects.create(**validated_data)
         return product
-        
+    
+    def update(self, instance, validated_data):
+        instance.category = validated_data.get("category", instance.category)
+        instance.title = validated_data.get("title", instance.title)
+        instance.description = validated_data.get("description", instance.description)
+        instance.price = validated_data.get("price", instance.price)
+        instance.quantity = validated_data.get("quantity", instance.quantity)
+        instance.product_img = validated_data.get("product_img", instance.product_img)
+        instance.updated_at - datetime.now(timezone.utc)
+        instance.save()
+        return instance

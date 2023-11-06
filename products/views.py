@@ -104,3 +104,51 @@ class ProductList(generics.GenericAPIView):
         products = Product.objects.all()
         product_data = self.serializer_class(products, many=True).data
         return JsonResponse(product_data, status=api_status.HTTP_200_OK, safe=False)
+    
+class ProductDetail(generics.GenericAPIView):
+    serializer_class = product_serializer.ProductModelSerializer
+    permission_classes = [IsAuthenticated]
+    @swagger_auto_schema(
+        tags=['products'],
+        operation_summary="product detail api") 
+    def get(self, request, product_id):
+        try:
+            product = Product.objects.get(pk=product_id)
+            product_data = self.serializer_class(product).data
+            return JsonResponse(product_data, status = api_status.HTTP_200_OK)
+        except Product.DoesNotExist:
+            return JsonResponse({"message": "Product Doesnot Exists"}, status = api_status.HTTP_404_NOT_FOUND)
+        
+class ProductUpdate(generics.GenericAPIView):
+    serializer_class = product_serializer.ProductModelSerializer
+    permission_classes = [IsAuthenticated]
+    @swagger_auto_schema(
+        tags=['products'],
+        operation_summary="product update api") 
+    def put(self, request, product_id):
+        try:
+            request_data = request.data
+            serializer = self.serializer_class(data=request_data)
+            if serializer.is_valid(raise_exception=True):
+                product = Product.objects.get(pk=product_id)
+                product = serializer.update(product, serializer.validated_data)
+                return JsonResponse({"productID": product.pk, "message": "Product updates succeffuly!"}, status = api_status.HTTP_200_OK)
+            else:
+                return JsonResponse({"message": "Product update Failed!"}, status = api_status.HTTP_400_BAD_REQUEST)
+        except Product.DoesNotExist:
+            return JsonResponse({"message": "Product doesnot Exists!"}, status = api_status.HTTP_404_NOT_FOUND)
+
+class ProductDelete(generics.GenericAPIView):
+    serializer_class = product_serializer.ProductModelSerializer
+    permission_classes = [ IsAuthenticated ]
+    @swagger_auto_schema(
+        tags=['products'],
+        operation_summary = "product delete api")
+    def delete(self, request, product_id):
+        try:
+            product = Product.objects.get(pk=product_id)
+            Product.objects.filter(pk=product_id).delete()
+            return JsonResponse({"productID": product_id, "message": "Product Successfully deleted!"}, status = api_status.HTTP_200_OK, safe=False)
+        except Product.DoesNotExist:
+            return JsonResponse({"message": "Product does not exists"}, status = api_status.HTTP_404_NOT_FOUND)
+        
